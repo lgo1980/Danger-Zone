@@ -1,0 +1,112 @@
+import dangerZone.*
+
+describe "test para el punto 1" {
+
+	const empleadoCapacitado = new Empleado()
+
+	test "Un empleado esta capacitado tiene mas salud que la salud critica" {
+		assert.notThat(empleadoCapacitado.estaIncapacitado())
+	}
+
+	test "Un empleado esta incapacitado tiene menos salud que la salud critica" {
+		empleadoCapacitado.perderSalud(36)
+		assert.that(empleadoCapacitado.estaIncapacitado())
+	}
+
+}
+
+describe "test para el punto 2" {
+
+	const empleadoConCapacidad = new Empleado()
+	const jefeSinCapacidad = new Jefe()
+
+	test "Un empleado no esta capacitado para usar una habilidad" {
+		const habilidad = "Espiar"
+		assert.notThat(empleadoConCapacidad.puedeUsarLaHabilidad(habilidad))
+	}
+
+	test "Un empleado esta capacitado para usar una habilidad" {
+		const habilidad = [ "Pelear" ]
+		empleadoConCapacidad.agregarHabilidades(habilidad)
+		assert.that(empleadoConCapacidad.puedeUsarLaHabilidad("Pelear"))
+	}
+
+	test "Un jefe esta capacitado para usar una habilidad porque un subordinado de el tiene la habilidad" {
+		const habilidad = [ "Pelear" ]
+		empleadoConCapacidad.agregarHabilidades(habilidad)
+		assert.notThat(jefeSinCapacidad.puedeUsarLaHabilidad("Pelear"))
+		jefeSinCapacidad.agregarAlEquipo(empleadoConCapacidad)
+		assert.that(jefeSinCapacidad.puedeUsarLaHabilidad("Pelear"))
+	}
+
+}
+
+describe "test para el punto 3" {
+
+	const equipoConCapacidad = new Equipo()
+	const misionEntrante = new Mision(peligrosidad = 40)
+	const empleado1 = new Empleado()
+	const empleado2 = new Empleado()
+
+	test "Un equipo no puede hacer la mision" {
+		const habilidadMision = [ "Pelear", "Pensar", "Espiar" ]
+		empleado1.agregarHabilidades([ "Pelear" ])
+		empleado2.agregarHabilidades([ "Pensar" ])
+		misionEntrante.agregarHabilidades(habilidadMision)
+		equipoConCapacidad.agregarAlEquipo([ empleado1, empleado2 ])
+		assert.notThat(equipoConCapacidad.puedeCumplirMision(misionEntrante))
+	}
+
+	test "Un equipo puede hacer la mision" {
+		const habilidadMision = [ "Pelear", "Pensar", "Espiar" ]
+		empleado1.agregarHabilidades([ "Pelear" ])
+		empleado2.agregarHabilidades([ "Pensar", "Espiar" ])
+		misionEntrante.agregarHabilidades(habilidadMision)
+		equipoConCapacidad.agregarAlEquipo([ empleado1, empleado2 ])
+		assert.that(equipoConCapacidad.puedeCumplirMision(misionEntrante))
+	}
+
+	test "Cuando un equipo no puede hacer la mision tira mensaje de error" {
+		const habilidadMision = [ "Pelear", "Pensar", "Espiar" ]
+		empleado1.agregarHabilidades([ "Pelear" ])
+		empleado2.agregarHabilidades([ "Pensar" ])
+		misionEntrante.agregarHabilidades(habilidadMision)
+		equipoConCapacidad.agregarAlEquipo([ empleado1, empleado2 ])
+		assert.throwsException({ equipoConCapacidad.cumplirMision(misionEntrante)})
+	}
+	
+	test "Un equipo puede hacer la mision y los empleados espias tienen las habilidades de la mision" {
+		const habilidadMision = [ "Pelear", "Pensar", "Espiar" ]
+		empleado1.agregarHabilidades([ "Pelear" ])
+		empleado2.agregarHabilidades([ "Pensar", "Espiar" ])
+		misionEntrante.agregarHabilidades(habilidadMision)
+		equipoConCapacidad.agregarAlEquipo([ empleado1, empleado2 ])
+		equipoConCapacidad.tipo(grupal)
+		equipoConCapacidad.cumplirMision(misionEntrante)
+		assert.equals(3,empleado1.habilidades().size())
+		assert.equals(3,empleado2.habilidades().size())
+		assert.equals(36.66667,empleado1.mostrarSalud())
+		assert.equals(36.66667,empleado2.mostrarSalud())
+	}
+	
+	test "Un equipo puede hacer la mision y los empleados oficinistas se le agregan una estrella mas" {
+		const habilidadMision = [ "Pelear", "Pensar", "Espiar" ]
+		const oficinista1 = new Oficinista(cantidadEstrellas = 0)
+		const oficinista2 = new Oficinista(cantidadEstrellas = 2)
+		empleado1.agregarHabilidades([ "Pelear" ])
+		empleado1.profesion(oficinista1)
+		empleado2.agregarHabilidades([ "Pensar", "Espiar" ])
+		empleado2.profesion(oficinista2)
+		misionEntrante.agregarHabilidades(habilidadMision)
+		equipoConCapacidad.agregarAlEquipo([ empleado1, empleado2 ])
+		equipoConCapacidad.tipo(grupal)
+		equipoConCapacidad.cumplirMision(misionEntrante)
+		assert.equals(1,oficinista1.mostrarEstrellas())
+		assert.equals(3,oficinista2.mostrarEstrellas())
+		assert.equals(espia,empleado2.profesion())
+		assert.equals(36.66667,empleado1.mostrarSalud())
+		assert.equals(36.66667,empleado2.mostrarSalud())
+	}
+
+}
+
